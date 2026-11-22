@@ -1,5 +1,5 @@
 # Minecraft-PVP-AI-bot----WaveDog
-我的世界高版本pvp的AI机器人
+我的世界高版本pvp的AI机器人 Minecraft pvp AI bot robot Wavedog
 将机器人装到服务器
 1. 准备服务器环境：Windows x64、Paper 1.21.11、Java 21 和 Node.js。
 2. 例如解压到 E:\WaveDog，在PowerShell中运行：
