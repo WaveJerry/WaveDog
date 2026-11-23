@@ -15,8 +15,21 @@
 感受transformer,我设想应该这样，
 向量对应动作战斗状态环境等各种之前近身剑斗transformer以及感受trans（二者感受的东西相同甚至感受trans更多）乃至玩家发的消息等各种游戏中需要感受的东西，
 同时向量对应自己要输出的字或单词短语（语素），那样可以说出更多样化的语言。
-const ids = tf.tensor2d(messages.map((message, i) => [...message, ...reply[i]]), undefined, 'int32')
-const inputs = tf.concat([game, tf.gather(this.embedding, ids)], 1)
-const state = this.block.apply(tf.add(inputs, this.position.slice([0, 0], [length, width])),
-  this.mask.slice([0, 0], [length, length]))
-return this.head.apply(state.slice([0, prefixLength, 0], [batch, reply[0].length, width]))
+  logits(input){
+    const {son,pvp,event,persona} = input
+    const batch = son.shape[0]
+    if(JSON.stringify(son.shape.slice(1))!==JSON.stringify([HISTORY,SON_WIDTH])
+      ||JSON.stringify(pvp.shape)!==JSON.stringify([batch,HISTORY,PVP_WIDTH])
+      ||JSON.stringify(event.shape)!==JSON.stringify([batch,HISTORY,EVENT_WIDTH])
+      ||JSON.stringify(persona.shape)!==JSON.stringify([batch,PERSONA_WIDTH]))
+      throw Error('invalid perception vector shapes')
+    const tokens = tf.stack([this.son.apply(son),this.pvp.apply(pvp),this.event.apply(event)],2)
+      .reshape([batch,HISTORY*3,this.config.width])
+    const sequence = tf.add(tf.concat([this.cls.tile([batch,1,1]),
+      this.persona.apply(persona).reshape([batch,1,this.config.width]),tokens],1),this.position)
+    let state=sequence
+    for(const block of this.blocks)state=block.apply(state)
+    const summary=state.slice([0,0,0],[batch,1,this.config.width]).reshape([batch,this.config.width])
+    const latest=event.slice([0,HISTORY-1,0],[batch,1,EVENT_WIDTH]).reshape([batch,EVENT_WIDTH])
+    return tf.add(this.head.apply(summary),this.eventHead.apply(latest))
+  }
